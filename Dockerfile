@@ -9,6 +9,8 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
     && apt-get install -y google-chrome-unstable fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst ttf-freefont \
       --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
+    
+COPY . /app/
 
 # Install puppeteer so it's available in the container.
 RUN npm i puppeteer \
@@ -17,14 +19,13 @@ RUN npm i puppeteer \
     && groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
     && mkdir -p /home/pptruser/Downloads \
     && chown -R pptruser:pptruser /home/pptruser \
-    && chown -R pptruser:pptruser /node_modules
+    && chown -R pptruser:pptruser /node_modules \
+    && chown -R pptruser:pptruser /app
 
 # Run everything after as non-privileged user.
 USER pptruser
 
-COPY . .
-
-RUN npm install || \
+RUN cd /app && npm install || \
   ((if [ -f npm-debug.log ]; then \
       cat npm-debug.log; \
     fi) && false)
