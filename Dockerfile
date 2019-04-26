@@ -22,7 +22,14 @@ RUN npm i puppeteer \
 # Run everything after as non-privileged user.
 USER pptruser
 
-RUN cd rendertron && npm install && npm run build
+COPY . .
+
+RUN npm install || \
+  ((if [ -f npm-debug.log ]; then \
+      cat npm-debug.log; \
+    fi) && false)
+    
+RUN npm run build
 
 EXPOSE 8080
 
