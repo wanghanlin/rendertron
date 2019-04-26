@@ -10,8 +10,6 @@ RUN wget -q -O - https://dl-ssl.google.com/linux/linux_signing_key.pub | apt-key
       --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
     
-COPY . /app/
-
 # Install puppeteer so it's available in the container.
 RUN npm i puppeteer \
     # Add user so we don't need --no-sandbox.
@@ -19,13 +17,14 @@ RUN npm i puppeteer \
     && groupadd -r pptruser && useradd -r -g pptruser -G audio,video pptruser \
     && mkdir -p /home/pptruser/Downloads \
     && chown -R pptruser:pptruser /home/pptruser \
-    && chown -R pptruser:pptruser /node_modules \
-    && chown -R pptruser:pptruser /app
+    && chown -R pptruser:pptruser /node_modules
 
 # Run everything after as non-privileged user.
 USER pptruser
 
-RUN cd /app && npm install || \
+WORKDIR /home/pptruser
+COPY . .
+RUN npm install || \
   ((if [ -f npm-debug.log ]; then \
       cat npm-debug.log; \
     fi) && false)
